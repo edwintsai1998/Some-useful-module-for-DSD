@@ -1,0 +1,32 @@
+module PushButton(FastCLK,SlowCLK,signal,RESET,pulse);
+input FastCLK,SlowCLK,signal,RESET;
+output pulse;
+reg w,q1,q2,q3,OnOff;
+
+always@(posedge SlowCLK or posedge RESET) begin
+if(RESET)
+begin w <= 1'b0; OnOff <= 1'b0; end
+else begin
+  if(signal==1) begin
+    if(OnOff==0)
+    OnOff <= 1'b1;
+    else
+    begin OnOff <= OnOff; w <= 1'b1; end
+  end
+  else begin
+    OnOff <= 1'b0; w <= 1'b0;
+  end
+end //end of reset
+end
+
+always @(posedge FastCLK or posedge RESET) begin
+if(RESET)
+begin q1=1'b0; q2=1'b0; q3=1'b0; end
+else begin
+q1 <= w;
+q2 <= q1;
+q3 <= q2;
+end
+end
+assign pulse = q1&q2&(!q3);
+endmodule
