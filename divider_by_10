@@ -1,0 +1,17 @@
+module div10(RESET,upperclk,clk_10);
+  input RESET,upperclk;
+  output reg clk_10;
+  reg [3:0]cout;
+  always@(posedge upperclk or RESET) begin
+    if(RESET) begin
+      clk_10 = 1'b0;
+      cout = 4'h0;
+    end
+    else if(cout==10) begin
+      clk_10 = ~clk_10;
+      cout <= 0;
+    end
+    else
+    cout <= cout + 1'b1;
+  end
+endmodule
