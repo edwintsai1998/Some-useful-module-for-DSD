@@ -1,0 +1,72 @@
+module Keyboard(RESET,ps2_data,systemCLK,ps2_clk,signal);
+input RESET,ps2_data,systemCLK,ps2_clk;
+output [2:0]signal;
+reg writing;
+reg [2:0]type;
+reg [2:0]q1,q2,q3;
+//1 for up(W); 2 for right(D); 3 for down(S); 4 for left(A); 0 for stop
+reg [7:0]data,data2;
+reg [4:0]DataCnt;
+
+always@(posedge ps2_clk or posedge RESET) begin
+    if(RESET) begin
+        writing <= 1'b0;
+        DataCnt <= 5'b0;
+        data <= 8'b0;
+        data2 <= 8'b0;
+    end
+    else begin
+        if(writing==0) begin
+            DataCnt <= 5'b0;
+            data2 <= data2;
+            data <= data;
+            if(ps2_data)
+                writing <= 1'b0;
+            else
+                writing <= 1'b1;
+        end //end of writing
+        else begin   //writing==1
+            if(DataCnt <= 7) begin
+            DataCnt <= DataCnt +1;
+            writing <= writing;
+            data[DataCnt] <= ps2_data;
+            data2 <= data2;
+            end
+            else begin
+                DataCnt <= 4'b0;
+                writing <= 1'b0;
+                data <= data;
+                data2 <= data;
+            end
+        end   //writing==1
+    end //end of reset
+end //end of always
+
+always@(*) begin
+    if(RESET)
+        type = 3'd0;
+    else begin
+        case({data,data2})
+        16'h1DF0: type = 3'd1;
+        16'h1BF0: type = 3'd2;
+        16'h1CF0: type = 3'd3;
+        16'h23F0: type = 3'd4;
+        default:  type = 3'd0;
+        endcase
+    end   //end of reset
+end
+
+always @(posedge systemCLK or posedge RESET) begin
+    if(RESET)begin 
+        q1=3'b0; q2=3'b0; q3=3'b0; 
+    end
+    else begin
+        q1[2:0] <= type[2:0];
+        q2[2:0] <= q1[2:0];
+        q3[2:0] <= q2[2:0];
+    end
+end
+assign signal[0] = q1[0]&q2[0]&(!q3[0]);
+assign signal[1] = q1[1]&q2[1]&(!q3[1]);
+assign signal[2] = q1[2]&q2[2]&(!q3[2]);
+endmodule
